@@ -1,29 +1,59 @@
 from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.serializers import Serializer, CharField, IntegerField, ValidationError
 
+from TODOs.filters import TodoFilter
 from TODOs.models import Project, TODO
 from users.models import User
-from users.serializers import UserModelSerializer
 from TODOs.serializers import ProjectModelSerializer, TODOModelSerializer
 
-# Create your views here.
 
-class UserViewSet(ModelViewSet):
-    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
-    queryset = User.objects.all()
-    serializer_class = UserModelSerializer
+class ProjectPagination(PageNumberPagination):
+    page_size = 20
 
 
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectModelSerializer
+    pagination_class = ProjectPagination
 
+    def get_queryset(self):
+        queryset = Project.objects.all()
+        name = self.request.query_params.get('name', None)
+        if name:
+            queryset = queryset.filter(name__contains=name)
+        return queryset
+
+
+class ToDoPagination(PageNumberPagination):
+    page_size = 10
 
 class TODOViewSet(ModelViewSet):
     queryset = TODO.objects.all()
     serializer_class = TODOModelSerializer
+    pagination_class = ToDoPagination
+
+    def get_queryset(self):
+        queryset = TODO.objects.all()
+        project = self.request.query_params.get('project', None)
+        if project:
+            queryset = queryset.filter(project)
+        return queryset
+
+    def destroy(self, request, pk=None):
+        try:
+            instance = self.get_object()
+            instance.is_active = False
+            instance.save()
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserSerializer(Serializer):
@@ -46,15 +76,5 @@ class UserSerializer(Serializer):
         user.save()
         return user
 
-
-class ProjectSerializer(Serializer):
-    name = CharField(max_length=64)
-    users = UserSerializer(many=True)
-
-
-class TODOSerializer(Serializer):
-    project = ProjectSerializer()
-    text = CharField(max_length=64)
-    user = UserSerializer()
 
 
