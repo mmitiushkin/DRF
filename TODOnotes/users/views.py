@@ -2,12 +2,19 @@ from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
+
 from .models import User
 from .serializers import UserModelSerializer
 
 # Create your views here.
+class UserModelViewSet(ModelViewSet):
 
-class UserViewSet(mixins.ListModelMixin,
+    queryset = User.objects.all()
+    serializer_class = UserModelSerializer
+
+
+class UserAPIView(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   viewsets.GenericViewSet):
