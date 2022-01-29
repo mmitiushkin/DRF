@@ -11,6 +11,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
+from django.views.generic import TemplateView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -38,4 +39,5 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0)),
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    path('', TemplateView.as_view(template_name='index.html')),
 ]

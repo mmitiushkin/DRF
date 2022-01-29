@@ -5,6 +5,8 @@ import ProjectList from './components/ProjectList.js'
 import TodoList from './components/TodoList.js'
 import ProjectTodos from './components/ProjectTodos.js'
 import LoginForm from './components/LoginForm.js'
+import TodoForm from './components/TodoForm.js'
+import ProjectForm from './components/ProjectForm.js'
 import axios from 'axios'
 
 
@@ -116,6 +118,60 @@ class App extends React.Component {
         })
     }
 
+    create_todo(project, user, text) {
+        console.log(project, user, text)
+        let headers = this.get_headers()
+        axios
+        .post("http://127.0.0.1:8000/api/TODOs/", {'project': project, 'user': user, 'text': text}, {headers})
+        .then(response => {
+            this.get_data();
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    }
+
+    delete_todo(id) {
+        let headers = this.get_headers()
+        axios
+        .delete(`http://127.0.0.1:8000/api/TODOs/${id}`, {headers})
+        .then(response => {
+            this.setState({
+                'todos': this.state.todos.filter((todo) => todo.id !== id)
+            })
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    }
+
+    create_project(name, users) {
+        console.log(name, users)
+        let headers = this.get_headers()
+        axios
+        .post("http://127.0.0.1:8000/api/projects/", {'name': name, 'users': users}, {headers})
+        .then(response => {
+            this.get_data();
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    }
+
+    delete_project(id) {
+        let headers = this.get_headers()
+        axios
+        .delete(`http://127.0.0.1:8000/api/projects/${id}`, {headers})
+        .then(response => {
+            this.setState({
+                'projects': this.state.projects.filter((project) => project.id !== id)
+            })
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    }
+
 
 
     render () {
@@ -132,9 +188,11 @@ class App extends React.Component {
                     </nav>
                     <Routes>
                         <Route exact path='/' element={<UserList users={this.state.users} /> } />
-                        <Route exact path='/projects' element={<ProjectList projects={this.state.projects} /> } />
+                        <Route exact path='/projects' element={<ProjectList projects={this.state.projects} delete_project={(id) => this.delete_project(id)}/> } />
+                        <Route exact path='/projects/create' element={<ProjectForm user={this.state.user} create_project={(name, users) => this.create_project(name, users)} /> } />
                         <Route exact path='/login' element={<LoginForm get_token={(login, password) => this.get_token(login, password)}/> } />
-                        <Route path='/todos' element={<TodoList todos={this.state.todos} /> } />
+                        <Route exact path='/todos' element={<TodoList todos={this.state.todos} delete_todo={(id) => this.delete_todo(id)}/> } />
+                        <Route exact path='/todos/create' element={<TodoForm user={this.state.user} create_todo={(project, user, text) => this.create_todo(project, user, text)} /> } />
                         <Route path="/users" element={<Navigate to="/"/>} />
                         <Route path='/projects/:id' element={<ProjectTodos todos={this.state.todos} /> } />
 
